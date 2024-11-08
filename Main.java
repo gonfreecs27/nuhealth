@@ -24,6 +24,14 @@ public class Main {
                     showDBWScreen();
                     break;
                 case 3:
+                    showTDEEScreen();
+                    break;
+                case 4:
+                    printHeader("This feature is not yet available.");
+                    break;
+                case 5:
+                    break;
+                case 6:
                     logout();
                     running = false;
                     break;
@@ -71,6 +79,20 @@ public class Main {
         }
     }
 
+    private static void pressEnterToContinue() {
+        Scanner scanner = new Scanner(System.in);
+
+        // Consume the left over new line character after reading the previous input
+        // This is just in case there is left over
+        scanner.nextLine();
+
+        System.out.println();
+        System.out.println();
+        System.out.println("Press [Enter] to go back to main menu...");
+        scanner.nextLine();
+
+        scanner.close();
+    }
 
     /**
      * Prints the main menu of the system, including options for BMI Calculator,
@@ -83,7 +105,10 @@ public class Main {
         printHeader("Main Menu:");
         System.out.println("1. BMI Calculator");
         System.out.println("2. DBW Calculator");
-        System.out.println("3. Exit");
+        System.out.println("3. TDEE Calculator");
+        System.out.println("4. Food Logs");
+        System.out.println("5. Pedometer Logs");
+        System.out.println("6. Exit");
         System.out.println();
         System.out.print("Enter your choice: ");
     }
@@ -99,7 +124,6 @@ public class Main {
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
-
 
     /**
      * This method displays the BMI calculation screen, where the user can enter
@@ -153,15 +177,10 @@ public class Main {
         // by calling the logBMI method of Student class
         student.logBMI();
 
-        // Consume the left over new line character after reading the previous input
-        scanner.nextLine();
+        scanner.close();
 
-        System.out.println();
-        System.out.println();
-        System.out.println("Press [Enter] to go back to main menu...");
-        scanner.nextLine();
+        pressEnterToContinue();
     }
-
 
     /**
      * Displays the screen for calculating Dry Body Weight (DBW) of a student.
@@ -221,20 +240,50 @@ public class Main {
         } catch (Exception e) {
             System.err.println(e);
         } finally {
-            // Consume the left over new line character after reading the previous input
-            scanner.nextLine();
-
-            System.out.println();
-            System.out.println();
-            System.out.println("Press [Enter] to go back to main menu...");
-            scanner.nextLine();
+            pressEnterToContinue();
+            scanner.close();
         }
     }
 
+    private static void showTDEEScreen() {
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            printHeader("TDEE Calculator");
+            System.out.print("Enter your Weight in Kilograms: ");
+            double weight = readDouble(scanner);
+    
+            System.out.println();
+            System.out.print("Enter your height in centimeters: ");
+            double height = readDouble(scanner);
+
+            System.out.println();
+            System.out.print("Enter your age in years: ");
+            int age = scanner.nextInt();
+
+            System.out.println();
+            System.out.print("Enter your gender (M/F): ");
+            char gender = scanner.next().charAt(0);
+
+
+            System.out.println();
+            System.out.println("Enter your activity level (1: Sendentary, 2: Light active, 3: Moderately active, 4: Very Active, 5: Super active)");
+            int activityLevel = scanner.nextInt();
+    
+            double tdee = calculateTDEE(gender, weight, height, age, activityLevel);
+            System.out.println();
+            System.out.printf("The student's TDEE is: %.2f", tdee);
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            pressEnterToContinue();
+            scanner.close();
+        }
+    }
 
     /**
-     * Logs the user out of the system by displaying an exit message.
-     * This method is used when the user chooses to exit the application.
+     * Logs the user out of the system by displaying an exit message. This
+     * method is used when the user chooses to exit the application.
      */
     private static void logout() {
         // Display a message indicating that the user is exiting the system
@@ -262,18 +311,18 @@ public class Main {
         return weight / (height * height);
     }
 
-
     /**
-     * Calculates the Dry Body Weight (DBW) based on the gender and height of the student.
-     * The DBW is calculated using the following formula:
-     * - For males: DBW = 50 + 2.3 * (height in inches - 60)
-     * - For females: DBW = 45.5 + 2.3 * (height in inches - 60)
-     * The height is provided in centimeters, which is converted to inches before applying the formula.
-     * 
+     * Calculates the Dry Body Weight (DBW) based on the gender and height of
+     * the student. The DBW is calculated using the following formula: - For
+     * males: DBW = 50 + 2.3 * (height in inches - 60) - For females: DBW = 45.5
+     * + 2.3 * (height in inches - 60) The height is provided in centimeters,
+     * which is converted to inches before applying the formula.
+     *
      * @param gender The gender of the student ('M' for male, 'F' for female).
      * @param heightInCm The height of the student in centimeters.
      * @return The calculated DBW (Dry Body Weight) in kilograms.
-     * @throws IllegalArgumentException If the height is less than 60 inches or the gender is invalid.
+     * @throws IllegalArgumentException If the height is less than 60 inches or
+     * the gender is invalid.
      */
     private static double calculateDBW(char gender, double heightInCm) {
         // Convert height first from cm to in
@@ -295,6 +344,45 @@ public class Main {
         return dbw;
     }
 
+    private static double calculateTDEE(char gender, double weight, double height, int age, int activityLevel) {
+        double tdee;
+        double bmr;
+
+        switch (gender) {
+            case 'M':
+            case 'm':
+                bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+                break;
+            case 'F':
+            case 'f':
+                bmr = 447.593 + (9.47 * weight) + (3.093 * height) - (4.330 * age);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid gender input. Please enter 'M' or 'F'");
+        }
+
+        switch (activityLevel) {
+            case 1:
+                tdee = bmr * 1.2;
+                break;
+            case 2:
+                tdee = bmr * 1.375;
+                break;
+            case 3:
+                tdee = bmr * 1.55;
+                break;
+            case 4:
+                tdee = bmr * 1.725;
+                break;
+            case 5:
+                tdee = bmr * 1.9;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid activity level input. Please enter a number between 1 and 5.");
+        }
+
+        return tdee;
+    }
 
     /**
      * Reads and returns a valid double input from the user.
